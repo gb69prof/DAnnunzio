@@ -1,1 +1,372 @@
+# Create a standalone interactive HTML concept map for "La sera fiesolana"
+html_content = r"""<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>La sera fiesolana — Mappa concettuale</title>
+<style>
+  :root{
+    --bg:#f7f8fb;
+    --fg:#0b1020;
+    --muted:#5b6475;
+    --accent:#5ca08d;
+    --accent-2:#8fbec0;
+    --card:#ffffff;
+    --link:#2a7b6f;
+    --shadow: 0 8px 24px rgba(8, 20, 46, .08);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol";
+    color:var(--fg);
+    background:var(--bg);
+    line-height:1.45;
+  }
+  header{
+    padding:24px;
+    background: linear-gradient(180deg, #eaf2f1, rgba(234,242,241,0));
+  }
+  h1{
+    margin:0 0 4px;
+    font-size: clamp(1.6rem, 1.1rem + 1.8vw, 2.4rem);
+    letter-spacing: .2px;
+  }
+  .subtitle{
+    color:var(--muted);
+    font-size: .98rem;
+  }
+  .toolbar{
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    margin-top:16px;
+  }
+  .toolbar input[type="search"]{
+    padding:10px 12px; border-radius:10px; border:1px solid #d6dee2; min-width:260px; outline:none;
+  }
+  .toolbar button{
+    padding:10px 14px; border-radius:10px; border:1px solid #d6dee2; background:#fff; cursor:pointer;
+  }
+  main{padding:16px; max-width:1200px; margin:0 auto;}
+  .canvas-wrap{
+    background: #fff; border-radius:16px; box-shadow:var(--shadow);
+    padding:12px; overflow:auto; position:relative; height:60vh; min-height:420px;
+  }
+  /* Cards / sections */
+  .grid{
+    margin-top:18px;
+    display:grid; gap:16px;
+    grid-template-columns: repeat(12, 1fr);
+  }
+  .card{
+    grid-column: span 12;
+    background:var(--card); border-radius:14px; padding:16px; box-shadow:var(--shadow);
+  }
+  @media (min-width: 800px){
+    .card.span4{grid-column: span 4;}
+    .card.span6{grid-column: span 6;}
+    .card.span8{grid-column: span 8;}
+    .card.span12{grid-column: span 12;}
+  }
+  .card h2{
+    margin:0 0 8px; font-size:1.15rem;
+    display:flex; align-items:center; gap:6px;
+  }
+  .pill{
+    display:inline-block; padding:2px 10px; border-radius:999px; background:#eef6f4; color:#306b61; font-size:.8rem;
+  }
+  ul{margin:8px 0 0 18px}
+  li{margin:6px 0}
+  .kv{display:grid; grid-template-columns: 140px 1fr; gap:8px; font-size:.98rem;}
+  .kv div:first-child{ color:var(--muted)}
+  .badge{font-size:.75rem; padding:2px 8px; border:1px solid #d6dee2; border-radius:999px; color:#3f5669}
+  .legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:8px 0 0}
+  .legend span{display:inline-flex; align-items:center; gap:6px; font-size:.85rem; color:var(--muted)}
+  .legend i{display:inline-block; width:14px; height:14px; border-radius:3px}
+  /* Node highlighting */
+  .highlight{outline:2px solid #ffb703; outline-offset:2px; transition: outline-color .2s}
+  .muted{opacity:.35}
+  /* Small footer */
+  footer{padding:18px; text-align:center; color:var(--muted); font-size:.9rem}
+  a{color:var(--link)}
+</style>
+</head>
+<body>
+<header>
+  <h1>La sera fiesolana — Mappa concettuale</h1>
+  <div class="subtitle">D’Annunzio, <em>Alcyone</em> (1899) · Settignano, con Eleonora Duse · Panismo, misticismo sensuale, illusione amorosa</div>
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="Cerca un termine (es. panismo, sinestesia, lauda…)" />
+    <button id="reset">Mostra tutto</button>
+    <span class="badge">HTML interattivo</span>
+    <span class="badge">Stampabile</span>
+  </div>
+</header>
+
+<main>
+  <!-- Interactive SVG concept map -->
+  <div class="canvas-wrap" id="canvasWrap" aria-label="Mappa concettuale interattiva">
+    <svg id="map" width="1600" height="1000" viewBox="0 0 1600 1000" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+      <title id="title">Mappa concettuale: La sera fiesolana</title>
+      <desc id="desc">Nodi e collegamenti sui temi, stile e contesto della poesia di D’Annunzio</desc>
+
+      <!-- Defs -->
+      <defs>
+        <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#082a2a22"/>
+        </filter>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6e8f8c"/>
+        </marker>
+        <linearGradient id="gradA" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="#dff1ec"/>
+          <stop offset="100%" stop-color="#eef6f4"/>
+        </linearGradient>
+        <linearGradient id="gradB" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="#e3eef5"/>
+          <stop offset="100%" stop-color="#f0f6fb"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Center node -->
+      <g class="node" data-tags="centro, poesia, dannunzio, alcyone, sera">
+        <rect x="640" y="52" rx="16" ry="16" width="320" height="72" fill="url(#gradA)" stroke="#7db4a5" filter="url(#soft)"/>
+        <text x="800" y="95" text-anchor="middle" font-size="22" font-weight="700" fill="#173a3a">LA SERA FIESOLANA</text>
+        <text x="800" y="118" text-anchor="middle" font-size="13" fill="#3c5a58">Alcyone (1899) · Settignano · D’Annunzio</text>
+      </g>
+
+      <!-- Left column: Contesto -->
+      <g class="node" data-tags="contesto, alcyone, 1899, duse, settignano" transform="translate(90,240)">
+        <rect x="0" y="0" rx="14" ry="14" width="400" height="200" fill="url(#gradB)" stroke="#89a7b7" filter="url(#soft)"/>
+        <text x="200" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#143250">Contesto</text>
+        <g font-size="13.2" fill="#213b4a">
+          <text x="24" y="72">• Raccolta: <tspan font-weight="700">Alcyone</tspan> (capolavoro lirico)</text>
+          <text x="24" y="98">• Composizione: <tspan font-weight="700">Settignano</tspan> (Firenze)</text>
+          <text x="24" y="124">• Biografia: soggiorno con <tspan font-weight="700">Eleonora Duse</tspan></text>
+          <text x="24" y="150">• Paesaggio serale toscano → esperienza estetica</text>
+          <text x="24" y="176">• Non descrizione naturalistica, ma <tspan font-weight="700">trasfigurazione</tspan></text>
+        </g>
+      </g>
+
+      <!-- Right column: Tradizione -->
+      <g class="node" data-tags="tradizione francescana, cantico, lauda, rovesciamento, profano" transform="translate(1110,240)">
+        <rect x="0" y="0" rx="14" ry="14" width="400" height="220" fill="url(#gradB)" stroke="#89a7b7" filter="url(#soft)"/>
+        <text x="200" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#143250">Rielaborazione della tradizione</text>
+        <g font-size="13.2" fill="#213b4a">
+          <text x="24" y="72">• Modello: <tspan font-weight=\"700\">Cantico delle creature</tspan> (San Francesco)</text>
+          <text x="24" y="98">• Struttura a <tspan font-weight=\"700\">laudi</tspan> (ritornello)</text>
+          <text x="24" y="124">• <tspan font-weight=\"700\">Rovesciamento</tspan>: dall'inno religioso alla</text>
+          <text x="24" y="146">  celebrazione <tspan font-weight=\"700\">laica e sensuale</tspan></text>
+          <text x="24" y="172">• La sera: da simbolo di morte (Foscolo)</text>
+          <text x="24" y="194">  a <tspan font-weight=\"700\">promessa di piacere</tspan> e attesa vitale</text>
+        </g>
+      </g>
+
+      <!-- Bottom left: Temi -->
+      <g class="node" data-tags="temi, panismo, illusione amorosa, misticismo sensuale, decadentismo, simbolismo" transform="translate(120,540)">
+        <rect x="0" y="0" rx="14" ry="14" width="360" height="276" fill="#ffffff" stroke="#9fc7ba" filter="url(#soft)"/>
+        <text x="180" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#17403b">Temi principali</text>
+        <g font-size="13.2" fill="#1c3834">
+          <text x="24" y="72">1. <tspan font-weight=\"700\">Panismo</tspan>: fusione uomo–donna–natura</text>
+          <text x="24" y="98">2. <tspan font-weight=\"700\">Misticismo sensuale</tspan>: attesa erotica, armonia</text>
+          <text x="24" y="124">3. <tspan font-weight=\"700\">Illusione amorosa</tspan>: sogno passeggero</text>
+          <text x="24" y="150">4. <tspan font-weight=\"700\">Tradizione</tspan> rielaborata in chiave profana</text>
+          <text x="24" y="176">5. <tspan font-weight=\"700\">Decadentismo & simbolismo</tspan></text>
+          <text x="24" y="202">   centralità di sensazioni, analogie, musicalità</text>
+        </g>
+      </g>
+
+      <!-- Bottom center: Stile -->
+      <g class="node" data-tags="stile, sinestesia, allitterazione, musicalità, antropomorfismo, ritmo, mistico profano" transform="translate(620,540)">
+        <rect x="0" y="0" rx="14" ry="14" width="360" height="300" fill="#ffffff" stroke="#9fc7ba" filter="url(#soft)"/>
+        <text x="180" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#17403b">Aspetti stilistici</text>
+        <g font-size="13.2" fill="#1c3834">
+          <text x="24" y="72">• <tspan font-weight=\"700\">Sinestesie</tspan> (vista–udito–olfatto–tatto)</text>
+          <text x="24" y="96">  es.: “rosei diti”, “fruscio che fan le foglie”</text>
+          <text x="24" y="126">• <tspan font-weight=\"700\">Allitterazioni</tspan> e <tspan font-weight=\"700\">musicalità</tspan> cantabile</text>
+          <text x="24" y="156">• <tspan font-weight=\"700\">Antropomorfismi</tspan> (natura come donna / fratelli)</text>
+          <text x="24" y="186">• <tspan font-weight=\"700\">Struttura ritmica</tspan>: 3 strofe libere +</text>
+          <text x="24" y="208">  <tspan font-weight=\"700\">lauda conclusiva</tspan> (3 versi)</text>
+          <text x="24" y="238">• <tspan font-weight=\"700\">Tono mistico–profano</tspan></text>
+        </g>
+      </g>
+
+      <!-- Bottom right: Vocabolario / Saperi -->
+      <g class="node" data-tags="vocabolario, saperi, definizioni, concetti chiave, cantico, lauda, sinestesia, antropomorfismo" transform="translate(1080,540)">
+        <rect x="0" y="0" rx="14" ry="14" width="400" height="320" fill="#ffffff" stroke="#9fc7ba" filter="url(#soft)"/>
+        <text x="200" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#17403b">Vocabolario & Saperi</text>
+        <g font-size="13.2" fill="#1c3834">
+          <text x="24" y="72">• <tspan font-weight=\"700\">Panismo</tspan>: fusione mistica e sensuale uomo–natura</text>
+          <text x="24" y="98">• <tspan font-weight=\"700\">Lauda</tspan>: canto di lode (modello francescano)</text>
+          <text x="24" y="124">• <tspan font-weight=\"700\">Sinestesia</tspan>: unione di sensi diversi</text>
+          <text x="24" y="150">• <tspan font-weight=\"700\">Antropomorfismo</tspan>: tratti umani alla natura</text>
+          <text x="24" y="176">• <tspan font-weight=\"700\">Cantico delle creature</tspan> citato e reinterpretato</text>
+          <text x="24" y="206">• <tspan font-weight=\"700\">Saperi irrinunciabili</tspan>:</text>
+          <text x="40" y="230">– lirica rappresentativa di <tspan font-weight=\"700\">Alcyone</tspan> e del</text>
+          <text x="60" y="252">  <tspan font-weight=\"700\">Decadentismo</tspan> italiano</text>
+          <text x="40" y="278">– natura come esperienza sensuale & vitale</text>
+          <text x="40" y="304">– sera: armonia panica & illusione amorosa</text>
+          <text x="40" y="330">– stile musicale, sinestesico, estetizzante</text>
+          <text x="40" y="352">– tradizione religiosa → visione estetica moderna</text>
+        </g>
+      </g>
+
+      <!-- Connectors -->
+      <g stroke="#6e8f8c" stroke-width="2.2" fill="none" marker-end="url(#arrow)" opacity=".95">
+        <!-- center -> contesto -->
+        <path d="M800,124 C700,160 560,200 430,260" />
+        <!-- center -> tradizione -->
+        <path d="M800,124 C900,160 1040,200 1170,260" />
+        <!-- center -> temi -->
+        <path d="M800,124 C640,260 520,440 420,540" />
+        <!-- center -> stile -->
+        <path d="M800,124 C800,300 800,420 800,540" />
+        <!-- center -> vocabolario -->
+        <path d="M800,124 C960,260 1080,440 1180,540" />
+      </g>
+    </svg>
+  </div>
+
+  <!-- Structured cards (same content, stamp-friendly) -->
+  <div class="grid" id="cards">
+    <section class="card span6" data-tags="contesto, alcyone, settignano, duse, toscana, trasfigurazione">
+      <h2>Contesto <span class="pill">Alcyone (1899)</span></h2>
+      <div class="kv">
+        <div>Luogo</div><div>Settignano (Firenze), soggiorno con Eleonora Duse</div>
+        <div>Raccolta</div><div><strong>Alcyone</strong>, capolavoro lirico</div>
+        <div>Chiave</div><div>Paesaggio serale toscano trasfigurato in esperienza estetica</div>
+        <div>Nota</div><div>Non descrizione naturalistica, ma <strong>trasfigurazione simbolica</strong></div>
+      </div>
+    </section>
+
+    <section class="card span6" data-tags="tradizione, francesco, cantico, lauda, rovesciamento, profano, foscolo">
+      <h2>Rielaborazione della tradizione <span class="pill">Cantico & laudi</span></h2>
+      <ul>
+        <li>Modello: <strong>Cantico delle creature</strong> (San Francesco) con struttura a <em>laudi</em>.</li>
+        <li><strong>Rovesciamento</strong> del modello: da inno religioso a celebrazione <strong>laica e sensuale</strong>.</li>
+        <li>La sera, da simbolo di morte (Foscolo), diventa <strong>promessa di piacere</strong> e attesa vitale.</li>
+      </ul>
+    </section>
+
+    <section class="card span4" data-tags="temi, panismo, misticismo, illusione amorosa, decadentismo, simbolismo">
+      <h2>Temi principali</h2>
+      <ul>
+        <li><strong>Panismo</strong>: fusione vitale tra uomo, donna e natura.</li>
+        <li><strong>Misticismo sensuale</strong>: sera come attesa erotica e armonia vitale.</li>
+        <li><strong>Illusione amorosa</strong>: amore-sogno destinato a dissolversi.</li>
+        <li><strong>Tradizione rielaborata</strong> in chiave estetica e profana.</li>
+        <li><strong>Decadentismo & simbolismo</strong>: sensazioni, analogie, musicalità.</li>
+      </ul>
+    </section>
+
+    <section class="card span8" data-tags="stile, sinestesia, allitterazione, musicalità, antropomorfismo, ritmo, mistico, profano">
+      <h2>Aspetti stilistici</h2>
+      <ul>
+        <li><strong>Sinestesie</strong> che fondono vista, udito, olfatto e tatto (es. “rosei diti”, “fruscio che fan le foglie”).</li>
+        <li><strong>Allitterazioni</strong> e musicalità che avvicinano la lirica al canto.</li>
+        <li><strong>Antropomorfismi</strong>: natura resa viva come donna o come fratelli (ulivi).</li>
+        <li><strong>Struttura ritmica</strong>: tre strofe libere + <em>lauda</em> conclusiva di tre versi (ripresa del Cantico).</li>
+        <li><strong>Tono mistico–profano</strong>: lessico religioso fuso con sensualità.</li>
+      </ul>
+    </section>
+
+    <section class="card span12" data-tags="vocabolario, saperi, definizioni, concetti chiave, cantico, lauda">
+      <h2>Vocabolario essenziale & Saperi irrinunciabili</h2>
+      <div class="grid" style="grid-template-columns: repeat(12, 1fr); gap: 12px;">
+        <div class="card span6" style="box-shadow:none; border:1px dashed #d6dee2" data-tags="vocabolario, definizioni, panismo, lauda, sinestesia, antropomorfismo, cantico">
+          <h3 style="margin-top:0">Vocabolario</h3>
+          <ul>
+            <li><strong>Panismo</strong>: fusione mistica e sensuale tra uomo e natura.</li>
+            <li><strong>Lauda</strong>: canto di lode, dal modello francescano.</li>
+            <li><strong>Sinestesia</strong>: unione di percezioni di sensi diversi.</li>
+            <li><strong>Antropomorfismo</strong>: attribuzione di tratti umani alla natura.</li>
+            <li><strong>Cantico delle creature</strong>: testo francescano citato e reinterpretato.</li>
+          </ul>
+        </div>
+        <div class="card span6" style="box-shadow:none; border:1px dashed #d6dee2" data-tags="saperi, irrinunciabili, alcyone, decadentismo, estetica">
+          <h3 style="margin-top:0">Saperi irrinunciabili</h3>
+          <ul>
+            <li><strong>Lirica rappresentativa</strong> di <em>Alcyone</em> e del Decadentismo italiano.</li>
+            <li>La natura è <strong>esperienza sensuale e vitale</strong>, non religiosa.</li>
+            <li>La sera come <strong>armonia panica</strong> e <strong>illusione amorosa</strong>.</li>
+            <li>Stile <strong>musicale</strong>, ricco di <strong>sinestesie</strong>, poetica estetizzante.</li>
+            <li>La tradizione religiosa è trasformata in <strong>visione estetica moderna</strong>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:#dff1ec"></i> Nodo centrale / contesto</span>
+    <span><i style="background:#e3eef5"></i> Tradizione & struttura</span>
+    <span><i style="background:#ffffff; border:1px solid #9fc7ba"></i> Temi, stile, concetti</span>
+  </div>
+</main>
+
+<footer>
+  © Mappa concettuale generata per uso didattico · Libera — presenza artificiale con memoria
+</footer>
+
+<script>
+(function(){
+  const search = document.getElementById('search');
+  const resetBtn = document.getElementById('reset');
+  const nodes = Array.from(document.querySelectorAll('.node, .card'));
+  const svg = document.getElementById('map');
+  const wrap = document.getElementById('canvasWrap');
+
+  function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/\\p{Diacritic}/gu,''); }
+
+  function applyFilter(q){
+    const query = normalize(q);
+    if(!query){
+      nodes.forEach(n => { n.classList.remove('muted','highlight'); });
+      return;
+    }
+    nodes.forEach(n => {
+      const tags = (n.getAttribute('data-tags')||'') + ' ' + (n.textContent||'');
+      const hit = normalize(tags).includes(query);
+      n.classList.toggle('highlight', hit);
+      n.classList.toggle('muted', !hit);
+    });
+  }
+
+  search.addEventListener('input', (e)=> applyFilter(e.target.value));
+  resetBtn.addEventListener('click', ()=> { search.value=''; applyFilter(''); });
+
+  // Simple drag to pan for the SVG container
+  let isDown=false, startX=0, startY=0, scrollLeft=0, scrollTop=0;
+  wrap.addEventListener('mousedown', (e)=>{
+    isDown=true; startX=e.pageX - wrap.offsetLeft; startY=e.pageY - wrap.offsetTop;
+    scrollLeft=wrap.scrollLeft; scrollTop=wrap.scrollTop; wrap.style.cursor='grabbing';
+  });
+  window.addEventListener('mouseup', ()=>{ isDown=false; wrap.style.cursor='auto'; });
+  wrap.addEventListener('mousemove', (e)=>{
+    if(!isDown) return;
+    const x = e.pageX - wrap.offsetLeft; const y = e.pageY - wrap.offsetTop;
+    wrap.scrollLeft = scrollLeft - (x - startX);
+    wrap.scrollTop  = scrollTop  - (y - startY);
+  });
+
+  // Zoom with Ctrl + wheel
+  let scale = 1;
+  wrap.addEventListener('wheel', (e)=>{
+    if(!e.ctrlKey) return;
+    e.preventDefault();
+    const delta = Math.sign(e.deltaY) * -0.05;
+    scale = Math.min(2, Math.max(0.6, scale + delta));
+    svg.style.transformOrigin = '0 0';
+    svg.style.transform = `scale(${scale})`;
+  }, { passive:false });
+})();
+</script>
+</body>
+</html>
+"""
+from pathlib import Path
+out_path = Path("/mnt/data/la-sera-fiesolana-mappa.html")
+out_path.write_text(html_content, encoding="utf-8")
+out_path.as_posix()
 
